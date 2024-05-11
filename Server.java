@@ -20,8 +20,16 @@ public class Server {
     static ArrayList<Event> activeEvents = new ArrayList<>();
     static ArrayList<Event> upcomingEvents = new ArrayList<>();
     static HashMap<String, EventHandler> allEvents = new HashMap<>(); //stored IDs and event handlers
+    static ArrayList<String[]> credentials = new ArrayList<>();
+
 
     public static void main (String args[]) throws IOException {
+
+        // Hardcoded credentials
+        credentials.add(new String[]{"user1", "password1"});
+        credentials.add(new String[]{"user2", "password2"});
+        credentials.add(new String[]{"user3", "password3"});
+
 
         //Create an event
         Date scheduledTime = new Date(124, 4, 12, 13, 30); // May 15, 2024, 14:30
@@ -76,7 +84,26 @@ public class Server {
                 }
 
 
-                //Authentication!
+                // Read encrypted username and password from the client
+                String encryptedUsername = in.readUTF();
+                String encryptedPassword = in.readUTF();
+
+                // Decrypt username and password using the secretKey
+                String username = SecurityUtil.decrypt(encryptedUsername, cipher, secretKey);
+                String password = SecurityUtil.decrypt(encryptedPassword, cipher, secretKey);
+
+                // Authenticate the username and password
+                if (authenticate(username, password)) {
+                    // Send authentication success message to the client
+                    out.writeUTF("authenticated");
+                } else {
+                    // Send authentication failure message to the client
+                    out.writeUTF("authentication_failed");
+                    // Close the connection
+                    clientSocket.close();
+                    continue;
+                }
+
 
                 String encryptedRequest = in.readUTF();
                 String decryptedRequest = SecurityUtil.decrypt(encryptedRequest, cipher, secretKey);
@@ -129,6 +156,15 @@ public class Server {
         } catch (InvalidKeyException e) {
             throw new RuntimeException(e);
         }
+    }
+    private static boolean authenticate(String username, String password) {
+        // Check if the provided username exists and the password matches
+        for (String[] cred : credentials) {
+            if (cred[0].equals(username) && cred[1].equals(password)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static Event findEventByID(String eventID) {

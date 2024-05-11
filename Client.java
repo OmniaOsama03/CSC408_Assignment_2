@@ -17,7 +17,11 @@ import java.util.Scanner;
 
 
 public class Client{
+    private static Scanner scanner = new Scanner(System.in);
+
     public static void main (String args[]) {
+
+
         // args[0] = ID
         // args[1] = Server IP "localhost"
 
@@ -64,7 +68,7 @@ public class Client{
             }
 
 
-            Scanner scanner = new Scanner(System.in);
+
 
             //Authentication goes here!
 
@@ -149,4 +153,22 @@ public class Client{
             }
         }
     }
+
+    private static boolean authenticateUser(DataOutputStream out, DataInputStream in, Cipher cipher, SecretKeySpec secretKey) throws IOException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+        System.out.println("Enter your credentials to authenticate:");
+        System.out.print("Username: ");
+        String username = scanner.nextLine();
+        System.out.print("Password: ");
+        String password = scanner.nextLine();
+
+        String encryptedUsername = SecurityUtil.encrypt(username, cipher, secretKey);
+        String encryptedPassword = SecurityUtil.encrypt(password, cipher, secretKey);
+
+        out.writeUTF(encryptedUsername);
+        out.writeUTF(encryptedPassword);
+
+        String authenticationResponse = in.readUTF();
+        return authenticationResponse.equals("authenticated");
+    }
 }
+
