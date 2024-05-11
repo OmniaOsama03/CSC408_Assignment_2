@@ -53,6 +53,7 @@ public class Server {
                 objectOut.writeObject(upcomingEvents);
                 objectOut.writeObject(activeEvents);
 
+                //Authentication!
 
                 String encryptedRequest = in.readUTF();
                 String decryptedRequest = SecurityUtil.decrypt(encryptedRequest, cipher, secretKey);

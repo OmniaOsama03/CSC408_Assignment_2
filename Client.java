@@ -19,7 +19,7 @@ import java.util.Scanner;
 public class Client{
     public static void main (String args[]) {
         // args[0] = ID
-        // args[1] = Server IP
+        // args[1] = Server IP "localhost"
 
         int clientID = Integer.parseInt(args[0]);
 
@@ -45,6 +45,9 @@ public class Client{
 
 
             Scanner scanner = new Scanner(System.in);
+
+
+            //Authentication goes here!
 
             // Display welcome message
             System.out.println("Welcome to the Event Management System!");
