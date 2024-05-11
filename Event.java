@@ -7,7 +7,7 @@ import java.net.Socket;
 import java.util.Date;
 import java.util.Map;
 
-public class Event implements Serializable //To allow the server to share the events to the client
+public class Event
 {
     private String id;
     private String name;

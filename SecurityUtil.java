@@ -8,6 +8,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
+import java.util.ArrayList;
 import java.util.Base64;
 
 class SecurityUtil {
@@ -31,14 +32,12 @@ class SecurityUtil {
         byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(data));
         return new String(decryptedBytes);
     }
-    //Short hand helper to turn Object into a json string
-    public static String getJson(Object o) {
-        return new GsonBuilder().setPrettyPrinting().create().toJson(o);
-    }
 
-    //Short hand helper to turn a json string into an Object
     public static Object getObject(String JsgString) {
         return new GsonBuilder().setPrettyPrinting().create().fromJson(JsgString, Event.class);
     }
 
+    public static String getJson(Object o) {
+        return new GsonBuilder().setPrettyPrinting().create().toJson(o);
+    }
 }

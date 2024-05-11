@@ -24,10 +24,10 @@ public class Server {
     public static void main (String args[]) throws IOException {
 
         //Create an event
-        Date scheduledTime = new Date(124, 4, 11, 13, 30); // May 15, 2024, 14:30
+        Date scheduledTime = new Date(124, 4, 12, 13, 30); // May 15, 2024, 14:30
         TicketEvent ticketEvent = new TicketEvent("Ev_1", "Book a Ticket!", scheduledTime);
 
-        //Activating all event handlers
+        //Create all event handlers
         for(int i = 0; i < activeEvents.size(); i++) {
             allEvents.put(activeEvents.get(i).getId(), new EventHandler(activeEvents.get(i)));
         }
@@ -51,6 +51,7 @@ public class Server {
                 DataInputStream in = new DataInputStream(clientSocket.getInputStream());
                 DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream());
 
+
                 // Generate AES key with appropriate length
                 SecretKeySpec secretKey = SecurityUtil.generateAESKey();
                 Cipher cipher = Cipher.getInstance("AES");
@@ -60,14 +61,14 @@ public class Server {
 
                 for(int i = 0; i < upcomingEvents.size(); i++)
                 {
-                    String eventasJSON = SecurityUtil.getJson(upcomingEvents.get(i));
+                    String eventasJSON = SecurityUtil.getJson(upcomingEvents.get(0));
 
                     out.writeUTF(SecurityUtil.encrypt(eventasJSON, cipher, secretKey));
-                }
+               }
 
                 out.writeInt(activeEvents.size());
 
-                for(int i = 0; i < activeEvents.size(); i++)
+                for(int i = 0; i < 1; i++)
                 {
                     String eventasJSON = SecurityUtil.getJson(activeEvents.get(i));
 

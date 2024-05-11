@@ -31,40 +31,40 @@ public class Client{
 
         Socket s = null;
         DataInputStream in = null;
-        DataOutputStream out = null;
         try{
             s = new Socket(serverIP, serverPort);
             in = new DataInputStream(s.getInputStream());
-            out = new DataOutputStream(s.getOutputStream());
+            DataOutputStream  out = new DataOutputStream(s.getOutputStream());
 
             // Generate AES key with appropriate length
             SecretKeySpec secretKey = SecurityUtil.generateAESKey();
             Cipher cipher = Cipher.getInstance("AES");
 
-
             int numUpcoming = in.readInt();
+            System.out.println(numUpcoming);
 
             for(int i = 0; i < numUpcoming; i++)
             {
                 String eventasJSON = in.readUTF();
-                Event event = (Event) SecurityUtil.getObject(SecurityUtil.decrypt(eventasJSON, cipher, secretKey));
-
-                upcomingEvents.add(event);
+                Event eventasObj = (Event) SecurityUtil.getObject(SecurityUtil.decrypt(eventasJSON, cipher, secretKey));
+                System.out.println(eventasObj.toString());
+                upcomingEvents.add(eventasObj);
             }
 
             int numActive = in.readInt();
+            System.out.println(numUpcoming);
 
             for(int i = 0; i < numActive; i++)
             {
 
-                        String eventasJSON = in.readUTF();
-                        Event event = (Event) SecurityUtil.getObject(SecurityUtil.decrypt(eventasJSON, cipher, secretKey));
-                        activeEvents.add(event);
-                        
+               String eventasJSON = in.readUTF();
+               Event event = (Event) SecurityUtil.getObject(SecurityUtil.decrypt(eventasJSON, cipher, secretKey));
+
+               activeEvents.add(event);
             }
 
-            Scanner scanner = new Scanner(System.in);
 
+            Scanner scanner = new Scanner(System.in);
 
             //Authentication goes here!
 
@@ -143,14 +143,6 @@ public class Client{
             if (in != null) {
                 try {
                     in.close();
-                } catch (IOException e) {
-                    System.out.println("Error closing object input stream: " + e.getMessage());
-                }
-            }
-
-            if (out != null) {
-                try {
-                    out.close();
                 } catch (IOException e) {
                     System.out.println("Error closing object input stream: " + e.getMessage());
                 }
