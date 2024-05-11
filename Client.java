@@ -25,9 +25,6 @@ public class Client{
         // args[0] = ID
         // args[1] = Server IP "localhost"
 
-        ArrayList<Event> upcomingEvents = new ArrayList<>();
-        ArrayList<Event> activeEvents = new ArrayList<>();
-
         int clientID = Integer.parseInt(args[0]);
 
         int serverPort = 40000;
@@ -44,57 +41,16 @@ public class Client{
             SecretKeySpec secretKey = SecurityUtil.generateAESKey();
             Cipher cipher = Cipher.getInstance("AES");
 
-            int numUpcoming = in.readInt();
-            System.out.println(numUpcoming);
-
-            for(int i = 0; i < numUpcoming; i++)
-            {
-                String eventasJSON = in.readUTF();
-                Event eventasObj = (Event) SecurityUtil.getObject(SecurityUtil.decrypt(eventasJSON, cipher, secretKey));
-                System.out.println(eventasObj.toString());
-                upcomingEvents.add(eventasObj);
+            if (!authenticateUser(out, in, cipher, secretKey)) {
+                System.out.println("Authentication failed. Exiting...");
+                return;
             }
-
-            int numActive = in.readInt();
-            System.out.println(numUpcoming);
-
-            for(int i = 0; i < numActive; i++)
-            {
-
-               String eventasJSON = in.readUTF();
-               Event event = (Event) SecurityUtil.getObject(SecurityUtil.decrypt(eventasJSON, cipher, secretKey));
-
-               activeEvents.add(event);
-            }
-
-
-
-
-            //Authentication goes here!
 
             // Display welcome message
             System.out.println("Welcome to the Event Management System!");
 
-            // Display upcoming events
-            System.out.println("Upcoming Events:");
-            if (upcomingEvents.isEmpty()) {
-                System.out.println("No upcoming events! Sorry :(");
-            } else {
-                for (Event event : upcomingEvents) {
-                    System.out.println(event.getId() + " - " + event.getName() + " - " + event.getScheduledTime());
-                }
-            }
-
-            // Display active events
-            System.out.println("\nActive Events:");
-
-            if (activeEvents.isEmpty()) {
-                System.out.println("No active events! Sorry :(");
-            } else {
-                for (Event event : activeEvents) {
-                    System.out.println(event.getId() + " - " + event.getName() + " - " + event.getScheduledTime());
-                }
-            }
+            //ACCEPT UPCOMING
+            //ACCEPT ACTIVE
 
             // Prompt user for action
             System.out.println("\nPlease enter your action (e.g., join <event_id>):");

@@ -64,26 +64,6 @@ public class Server {
                 SecretKeySpec secretKey = SecurityUtil.generateAESKey();
                 Cipher cipher = Cipher.getInstance("AES");
 
-
-                out.writeInt(upcomingEvents.size());
-
-                for(int i = 0; i < upcomingEvents.size(); i++)
-                {
-                    String eventasJSON = SecurityUtil.getJson(upcomingEvents.get(0));
-
-                    out.writeUTF(SecurityUtil.encrypt(eventasJSON, cipher, secretKey));
-               }
-
-                out.writeInt(activeEvents.size());
-
-                for(int i = 0; i < 1; i++)
-                {
-                    String eventasJSON = SecurityUtil.getJson(activeEvents.get(i));
-
-                    out.writeUTF(SecurityUtil.encrypt(eventasJSON, cipher, secretKey));
-                }
-
-
                 // Read encrypted username and password from the client
                 String encryptedUsername = in.readUTF();
                 String encryptedPassword = in.readUTF();
@@ -104,6 +84,8 @@ public class Server {
                     continue;
                 }
 
+                //SEND UPCOMING
+                //SEND ACTIVE
 
                 String encryptedRequest = in.readUTF();
                 String decryptedRequest = SecurityUtil.decrypt(encryptedRequest, cipher, secretKey);
