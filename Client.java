@@ -39,6 +39,7 @@ public class Client{
 
             objectIn = new ObjectInputStream(s.getInputStream());
 
+            //Decerialize into objects
             ArrayList<Event> upcomingEvents = (ArrayList<Event>) objectIn.readObject();
             ArrayList<Event> activeEvents = (ArrayList<Event>) objectIn.readObject();
 

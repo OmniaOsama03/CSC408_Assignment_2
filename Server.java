@@ -44,6 +44,8 @@ public class Server {
 
                 ObjectOutputStream objectOut = new ObjectOutputStream(clientSocket.getOutputStream());
 
+                //Transform the arraylists into json string format, and send it using out.writeUTF()
+
                 // Generate AES key with appropriate length
                 SecretKeySpec secretKey = SecurityUtil.generateAESKey();
                 Cipher cipher = Cipher.getInstance("AES");
