@@ -84,7 +84,18 @@ public class Server {
                     continue;
                 }
 
-                //SEND UPCOMING
+                //Sending the upcoming events:
+                if(upcomingEvents.size() == 0)
+                {
+                    String noUpcoming = "Upcoming Events: \nNone!";
+                    out.writeUTF(SecurityUtil.encrypt(noUpcoming, cipher, secretKey));
+                }
+                else {
+                    for (int i = 0; i < upcomingEvents.size(); i++) {
+
+                    }
+                }
+
                 //SEND ACTIVE
 
                 String encryptedRequest = in.readUTF();

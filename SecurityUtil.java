@@ -5,10 +5,10 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
-import java.util.ArrayList;
 import java.util.Base64;
 
 class SecurityUtil {
@@ -33,11 +33,24 @@ class SecurityUtil {
         return new String(decryptedBytes);
     }
 
-    public static Object getObject(String JsgString) {
-        return new GsonBuilder().setPrettyPrinting().create().fromJson(JsgString, Event.class);
-    }
+    public static String applySha256(String input){
 
-    public static String getJson(Object o) {
-        return new GsonBuilder().setPrettyPrinting().create().toJson(o);
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256"); // Use "SHA-256"
+
+            //Applies sha256 to our input,
+            byte[] hash = digest.digest(input.getBytes("UTF-8"));
+
+            StringBuffer hexString = new StringBuffer(); // This will contain hash as hexidecimal
+            for (int i = 0; i < hash.length; i++) {
+                String hex = Integer.toHexString(0xff & hash[i]);
+                if(hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        }
+        catch(Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
