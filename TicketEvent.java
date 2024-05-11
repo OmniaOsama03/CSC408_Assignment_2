@@ -30,7 +30,8 @@ public class TicketEvent extends Event{
     }
 
 
-    public void InitiateTicketEvent(int clientID, DataInputStream in, DataOutputStream out) throws IOException {
+    @Override
+    public void InitiateEvent(int clientID, DataInputStream in, DataOutputStream out) {
 
         try {
 
@@ -78,9 +79,6 @@ public class TicketEvent extends Event{
 
                             answer = in.readUTF();
                             decryptedAnswer = SecurityUtil.decrypt(answer, cipher, secretKey);
-
-                            System.out.println(decryptedAnswer);
-
                             received = true;
                         }
                     }
@@ -89,7 +87,6 @@ public class TicketEvent extends Event{
                     clientData[0][i] = "saved";
                     clientData[1][i] = decryptedAnswer;
 
-                    System.out.println("I'm saved!");
 
                     clientInfo.put(clientID, clientData); //Update hashmap after response
                 } else {

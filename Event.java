@@ -14,6 +14,7 @@ public class Event implements Serializable //To allow the server to share the ev
     private boolean active; //Set the value in the constructor.
     private long scheduledTimeMillis; // Scheduled time in milliseconds since the epoch
     static private Map<Integer, Socket> clientSockets; // Map to store client sockets
+    EventHandler eventHandler;
 
     public Event(String id, String name, Date scheduledTime) {
         this.id = id;
@@ -24,10 +25,12 @@ public class Event implements Serializable //To allow the server to share the ev
         if (System.currentTimeMillis() >= scheduledTimeMillis) {
             active = true;
             Server.activeEvents.add(this); // Add event to the list of active events
+
         } else {
             active = false;
             Server.upcomingEvents.add(this); // Add event to the list of upcoming events
         }
+
     }
 
 
@@ -36,8 +39,12 @@ public class Event implements Serializable //To allow the server to share the ev
         this.active = active;
     }
 
-    public static void setClientSockets(Map<Integer, Socket> clientSockets) {
+    public  void setClientSockets(Map<Integer, Socket> clientSockets) {
         Event.clientSockets = clientSockets;
+    }
+
+    public void setEventHandler(EventHandler eventHandler) {
+        this.eventHandler = eventHandler;
     }
 
     public String getId() {

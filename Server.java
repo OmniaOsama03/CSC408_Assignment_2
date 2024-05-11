@@ -14,18 +14,27 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 
 public class Server {
     static ArrayList<Event> activeEvents = new ArrayList<>();
     static ArrayList<Event> upcomingEvents = new ArrayList<>();
+    static HashMap<String, EventHandler> allEvents = new HashMap<>(); //stored IDs and event handlers
+
     public static void main (String args[]) throws IOException {
 
         //Create an event
         Date scheduledTime = new Date(124, 4, 11, 13, 30); // May 15, 2024, 14:30
         TicketEvent ticketEvent = new TicketEvent("Ev_1", "Book a Ticket!", scheduledTime);
 
-        //Create the event handler
-        EventHandler TicketEventHandler = new EventHandler(ticketEvent);
+        //Activating all event handlers
+        for(int i = 0; i < activeEvents.size(); i++) {
+            allEvents.put(activeEvents.get(i).getId(), new EventHandler(activeEvents.get(i)));
+        }
+
+        for(int i = 0; i < upcomingEvents.size(); i++) {
+            allEvents.put(upcomingEvents.get(i).getId(), new EventHandler(upcomingEvents.get(i)));
+        }
 
 
         ServerSocket listenSocket;
@@ -79,10 +88,10 @@ public class Server {
                     } else {
                         // Check if the event has started
                         if (event.isActive()) {
-                            TicketEventHandler.addToQueue(clientID, clientSocket);
+                            allEvents.get(eventID).addToQueue(clientID, clientSocket);
 
                         } else {
-                            TicketEventHandler.addToPrequeue(clientID, clientSocket);
+                            allEvents.get(eventID).addToPrequeue(clientID, clientSocket);
                         }
                     }
                 } else {

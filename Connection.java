@@ -26,14 +26,10 @@ class Connection extends Thread {
 
     public void run() {
 
-        try {
-            ((TicketEvent) event).InitiateTicketEvent(clientID, in, out);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+            event.InitiateEvent(clientID, in, out);
 
     }
-    }
+}
 
 
 
