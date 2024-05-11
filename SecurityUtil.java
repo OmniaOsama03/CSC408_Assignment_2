@@ -1,3 +1,5 @@
+import com.google.gson.GsonBuilder;
+
 import javax.crypto.*;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -29,18 +31,14 @@ class SecurityUtil {
         byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(data));
         return new String(decryptedBytes);
     }
-
-   /* public static Object encrypt(Object data, Cipher cipher, SecretKeySpec secretKey)
-            throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
-            IllegalBlockSizeException, BadPaddingException, IOException {
-        String encryptedString = encrypt(data.toString(), cipher, secretKey);
-        return (Object) encryptedString;
+    //Short hand helper to turn Object into a json string
+    public static String getJson(Object o) {
+        return new GsonBuilder().setPrettyPrinting().create().toJson(o);
     }
 
-    public static Object decrypt(Object data, Cipher cipher, SecretKeySpec secretKey)
-            throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
-            IllegalBlockSizeException, BadPaddingException, IOException {
-        String decryptedString = decrypt(data.toString(), cipher, secretKey);
-        return (Object) decryptedString;
-    }*/
+    //Short hand helper to turn a json string into an Object
+    public static Object getObject(String JsgString) {
+        return new GsonBuilder().setPrettyPrinting().create().fromJson(JsgString, Event.class);
+    }
+
 }

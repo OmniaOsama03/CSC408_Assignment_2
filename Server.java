@@ -51,16 +51,29 @@ public class Server {
                 DataInputStream in = new DataInputStream(clientSocket.getInputStream());
                 DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream());
 
-                ObjectOutputStream objectOut = new ObjectOutputStream(clientSocket.getOutputStream());
-
-                //Transform the arraylists into json string format, and send it using out.writeUTF()
-
                 // Generate AES key with appropriate length
                 SecretKeySpec secretKey = SecurityUtil.generateAESKey();
                 Cipher cipher = Cipher.getInstance("AES");
 
-                objectOut.writeObject(upcomingEvents);
-                objectOut.writeObject(activeEvents);
+
+                out.writeInt(upcomingEvents.size());
+
+                for(int i = 0; i < upcomingEvents.size(); i++)
+                {
+                    String eventasJSON = SecurityUtil.getJson(upcomingEvents.get(i));
+
+                    out.writeUTF(SecurityUtil.encrypt(eventasJSON, cipher, secretKey));
+                }
+
+                out.writeInt(activeEvents.size());
+
+                for(int i = 0; i < activeEvents.size(); i++)
+                {
+                    String eventasJSON = SecurityUtil.getJson(activeEvents.get(i));
+
+                    out.writeUTF(SecurityUtil.encrypt(eventasJSON, cipher, secretKey));
+                }
+
 
                 //Authentication!
 
