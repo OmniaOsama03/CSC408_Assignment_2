@@ -1,3 +1,5 @@
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.Serializable;
@@ -72,11 +74,21 @@ public class Event implements Serializable //To allow the server to share the ev
     public void InitiateEvent(int clientID, DataInputStream in, DataOutputStream out)
     {
         try {
-            out.writeUTF("Welcome to your session in event !" + "\n" + "Hello client, are you able to reply?");
+            // Generate AES key with appropriate length
+            SecretKeySpec secretKey = SecurityUtil.generateAESKey();
+            Cipher cipher = Cipher.getInstance("AES");
 
-            String message = in.readUTF();
-            out.writeUTF("You said: " + message);
+            String encryptedOut = SecurityUtil.encrypt("\n---___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ---", cipher, secretKey);
+            out.writeUTF(encryptedOut);
 
+            encryptedOut = SecurityUtil.encrypt("Welcome to your session in event: " + this.name +  "\n" + "Hello client, are you able to reply?", cipher, secretKey);
+            out.writeUTF(encryptedOut);
+
+            String encryptedIn = in.readUTF();
+            System.out.println("Received from client " + clientID + ": " + new String(SecurityUtil.decrypt(encryptedIn, cipher, secretKey)));
+
+            encryptedOut = SecurityUtil.encrypt("Oki doki! Goodbye client!", cipher, secretKey);
+            out.writeUTF(encryptedOut);
 
         }catch(Exception e)
         {

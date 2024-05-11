@@ -1,7 +1,20 @@
-import java.io.*;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.*;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
+import java.util.Scanner;
+
 
 public class Client{
     public static void main (String args[]) {
@@ -9,9 +22,8 @@ public class Client{
         // args[1] = Server IP
 
         int clientID = Integer.parseInt(args[0]);
-        boolean isClientConnected;
 
-        int serverPort = 20000;
+        int serverPort = 40000;
         String serverIP = args[1];
 
         Socket s = null;
@@ -21,10 +33,15 @@ public class Client{
             DataInputStream in = new DataInputStream(s.getInputStream());
             DataOutputStream out = new DataOutputStream(s.getOutputStream());
 
+            // Generate AES key with appropriate length
+            SecretKeySpec secretKey = SecurityUtil.generateAESKey();
+            Cipher cipher = Cipher.getInstance("AES");
+
             objectIn = new ObjectInputStream(s.getInputStream());
 
             ArrayList<Event> upcomingEvents = (ArrayList<Event>) objectIn.readObject();
             ArrayList<Event> activeEvents = (ArrayList<Event>) objectIn.readObject();
+
 
             Scanner scanner = new Scanner(System.in);
 
@@ -55,31 +72,46 @@ public class Client{
             // Prompt user for action
             System.out.println("\nPlease enter your action (e.g., join <event_id>):");
             String action = scanner.nextLine();
+            String fullMessage = action + " " + clientID;
+
+            String encryptedMessage = SecurityUtil.encrypt(fullMessage, cipher, secretKey);
+            out.writeUTF(encryptedMessage);
 
 
-            // Send action to the server
-            out.writeUTF(action + " " + clientID);
+            while (true) {
+                    // Read input from the server
+                    if (in.available() > 0) {
+                        String encryptedData = in.readUTF();
+                        String decryptedData = SecurityUtil.decrypt(encryptedData, cipher, secretKey);
+                        System.out.println(decryptedData);
 
-            while(true)
-            {
-                if(in.available() > 1) {
-                    String input = in.readUTF();
-                    System.out.println(input);
-                }
-                else {
-                    String output = scanner.nextLine();
-                    out.writeUTF(output);
-                }
+                        if(!decryptedData.startsWith("---") && !decryptedData.startsWith("\n---")){
+                            String output = scanner.nextLine();
 
+                            encryptedMessage = SecurityUtil.encrypt(output, cipher, secretKey);
+                            out.writeUTF(encryptedMessage);
+                        }
+                    }
             }
 
         }catch (UnknownHostException e) {System.out.println("Error Socket:"+e.getMessage());
         }catch (IOException e){
-            System.out.println("Exception: " + e.getMessage()); e.printStackTrace();
-        } //catch (InterruptedException e) {e.printStackTrace();}
+            System.out.println("Exception: " + e.getMessage()); e.printStackTrace();}
         catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);}
-        finally {
+           throw new RuntimeException(e);}
+        catch (NoSuchPaddingException e) {
+            throw new RuntimeException(e);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        } catch (InvalidKeySpecException e) {
+            throw new RuntimeException(e);
+        } catch (IllegalBlockSizeException e) {
+            throw new RuntimeException(e);
+        } catch (BadPaddingException e) {
+            throw new RuntimeException(e);
+        } catch (InvalidKeyException e) {
+            throw new RuntimeException(e);
+        } finally {
             if (s != null) {
                 try {
                     s.close();

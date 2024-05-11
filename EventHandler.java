@@ -1,16 +1,24 @@
-import java.io.DataInputStream;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.Socket;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.*;
-import java.net.*;
 
 
 public class EventHandler extends Thread {
-    Event event;
-    Queue<Integer> queue;
-    Queue<Integer> prequeue;
-    Map<Integer, Integer> clientPositions; // Map to store client positions in the queue
-    static Map<Integer, Socket> clientSockets; // Map to store client sockets
+      Event event;
+      Queue<Integer> queue;
+      Queue<Integer> prequeue;
+      Map<Integer, Integer> clientPositions; // Map to store client positions in the queue
+      static Map<Integer, Socket> clientSockets; // Map to store client sockets
+
 
 
     public EventHandler(Event event) {
@@ -26,72 +34,147 @@ public class EventHandler extends Thread {
     @Override
     public void run() {
 
-        while(true) {
+        while (true) {
 
-            if(!event.isActive())// Checks if it's time to activate the event
-            {
-                long currentTimeMillis = System.currentTimeMillis();
+            try {
+                SecretKeySpec secretKey = SecurityUtil.generateAESKey();
+                Cipher cipher = Cipher.getInstance("AES");
 
-                if (currentTimeMillis >= event.getScheduledTimeMillis()) {
-                    event.setActive(true);
-                    initializeQueue();
+                if (!prequeue.isEmpty()) {
+                    Iterator<Integer> iterator = prequeue.iterator();
 
-                    //Updating list of events in server
-                    Server.upcomingEvents.remove(event);
-                    Server.activeEvents.add(event);
-                }
-            }
-
-
-            /*if (event.isActive() && !queue.isEmpty()) {
-                // Iterate over the queue
-                Iterator<Integer> iterator = queue.iterator();
-
-                while (iterator.hasNext()) {
-                    try {
-                        Thread.sleep(300);
-
+                    while (iterator.hasNext()) {
                         int clientID = iterator.next();
-                        iterator.remove(); // Remove the client from the queue
 
-                        // Get the client socket for the client ID
-                        Socket socketClient = getClientSocket(clientID);
-                        if (socketClient != null) {
-                            // Create a Connection thread for the client
-                            Connection connection = new Connection(clientID, socketClient, event, out, in);
+                        try {
+                            Thread.sleep(1000);
+
+                            // Get the client socket for the client ID
+                            Socket socketClient = getClientSocket(clientID);
+                            DataOutputStream out = new DataOutputStream(socketClient.getOutputStream());
+
+                            long timeLeftMillis = event.getScheduledTimeMillis() - System.currentTimeMillis();
+                            long minutesLeft = timeLeftMillis / (60 * 1000); // Convert milliseconds to minutes
+                            long secondsLeft = (timeLeftMillis / 1000) % 60;
+
+                            if (minutesLeft != 0) {
+                                String encryptedMessage = SecurityUtil.encrypt("---Event will start in " + minutesLeft + " minutes. Please be patient!", cipher, secretKey);
+                                out.writeUTF(encryptedMessage);
+                            }
+                            else {
+                                String encryptedMessage = SecurityUtil.encrypt("---Event will start in " + secondsLeft + " seconds. Please be patient!", cipher, secretKey);
+                                out.writeUTF(encryptedMessage);
+                            }
+
+                        } catch (IOException e) {
+                            System.out.println("Socket closed for client: " + clientID + "! They have been removed from the prequeue");
+                            iterator.remove(); // Remove the client from the prequeue
+                            System.out.println("Size of pre-queue after removal: " + prequeue.size());
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        } catch (IllegalBlockSizeException e) {
+                            throw new RuntimeException(e);
+                        } catch (BadPaddingException e) {
+                            throw new RuntimeException(e);
+                        } catch (InvalidKeyException e) {
+                            throw new RuntimeException(e);
                         }
+                    }
+                }
+
+
+                if (!event.isActive())// Checks if it's time to activate the event
+                {
+                    long currentTimeMillis = System.currentTimeMillis();
+
+                    if (currentTimeMillis >= event.getScheduledTimeMillis()) {
+                        event.setActive(true);
+                        try {
+                            initializeQueue();
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                        //Updating list of events in server
+                        Server.upcomingEvents.remove(event);
+                        Server.activeEvents.add(event);
+                    }
+                }
+
+
+                if (event.isActive() && !queue.isEmpty()) {
+                    try {
+                        Thread.sleep(200);
+
+                        // Iterate over the queue
+                        Iterator<Integer> iterator = queue.iterator();
+
+                        while (iterator.hasNext()) {
+                            int clientID = iterator.next();
+                            iterator.remove(); // Remove the client from the queue
+
+                            // Get the client socket for the client ID
+                            Socket socketClient = getClientSocket(clientID);
+                            if (socketClient != null) {
+                                // Create a Connection thread for the client
+                                Connection connection = new Connection(clientID, socketClient, event);
+                            }
+                        }
+
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
                 }
-                */
 
-            try {
-                Thread.sleep(1);
+              Thread.sleep(1);
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException(e);
+            } catch (NoSuchPaddingException e) {
+                throw new RuntimeException(e);
+            } catch (InvalidKeySpecException e) {
+                throw new RuntimeException(e);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-
         }
     }
 
     public void addToQueue(Integer client, Socket clientSocket) throws IOException {
+        try {
+            DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream());
+            SecretKeySpec secretKey = SecurityUtil.generateAESKey();
+            Cipher cipher = Cipher.getInstance("AES");
 
-        DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream());
+            // Check if the event is active before adding client to the queue
+            if (event.isActive()) {
+                if (!clientSockets.containsKey(client))
+                    clientSockets.put(client, clientSocket); // Store the client socket in the map
 
-        // Check if the event is active before adding client to the queue
-        if (event.isActive()) {
-            if (!clientSockets.containsKey(client))
-                clientSockets.put(client, clientSocket); // Store the client socket in the map
+                clientPositions.put(client, queue.size() + 1); // Store client position in the queue
 
-            clientPositions.put(client, queue.size() + 1); // Store client position in the queue
+                queue.add(client);
 
-            queue.add(client);
-            out.writeUTF("You have been added to the event: " + event.getName() + ". \n Your position in the queue: " + queue.size());
-            System.out.println("Client " + client + " has been added to the queue for event: " + event.getName() + "\n Queue size:" + queue.size());
+                String encryptedMessage = SecurityUtil.encrypt("--- You have been added to the event: " + event.getName() + ".\n" + "Your position in the queue: " + getClientPosition(client), cipher, secretKey);
+                out.writeUTF(encryptedMessage);
 
+                System.out.println("Client " + client + " has been added to the queue for event: " +
+                        event.getName() + "\nQueue size: " + queue.size());
+            }
+        } catch (NoSuchPaddingException e) {
+            throw new RuntimeException(e);
+        } catch (IllegalBlockSizeException e) {
+            throw new RuntimeException(e);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        } catch (InvalidKeySpecException e) {
+            throw new RuntimeException(e);
+        } catch (BadPaddingException e) {
+            throw new RuntimeException(e);
+        } catch (InvalidKeyException e) {
+            throw new RuntimeException(e);
         }
+
     }
+
 
     public void addToPrequeue(Integer client, Socket clientSocket) {
         // Check if the event has not started yet before adding client to the prequeue
@@ -100,14 +183,14 @@ public class EventHandler extends Thread {
                 clientSockets.put(client, clientSocket); // Store the client socket in the map
 
 
-            clientPositions.put(client, queue.size() - 1); // Store client position in the queue
+                clientPositions.put(client, queue.size() - 1); // Store client position in the queue
 
             prequeue.add(client);
             System.out.println("Client " + client + " has been added to the pre-queue for event: " + event.getName());
         }
     }
 
-    private void initializeQueue() {
+    private void initializeQueue() throws IOException {
         // Randomize the order of clients in the prequeue and add them to the main queue
         Collections.shuffle((List<Integer>) prequeue);
 
@@ -118,7 +201,7 @@ public class EventHandler extends Thread {
         while (iterator.hasNext()) {
             Integer client = iterator.next();
             iterator.remove(); // Remove the client using the iterator
-            queue.add(client); // Add the removed client to the main queue
+            addToQueue(client, getClientSocket(client));
             clientPositions.put(client, queue.size() - 1); // Store client position in the queue
         }
         System.out.println("Queue initialized for event: " + event.getName());

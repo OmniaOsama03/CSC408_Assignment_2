@@ -1,6 +1,19 @@
-import java.io.*;
-import java.net.*;
-import java.util.*;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
+import java.util.Date;
 
 public class Server {
     static ArrayList<Event> activeEvents = new ArrayList<>();
@@ -8,16 +21,16 @@ public class Server {
     public static void main (String args[]) throws IOException {
 
         //Create an event
-        Date scheduledTime = new Date(124, 4, 10, 15, 25); // May 15, 2024, 14:30
-        Event sampleEvent = new Event("Event1", "Sample Event", scheduledTime);
+        Date scheduledTime = new Date(124, 4, 11, 13, 30); // May 15, 2024, 14:30
+        TicketEvent ticketEvent = new TicketEvent("Ev_1", "Book a Ticket!", scheduledTime);
 
         //Create the event handler
-        EventHandler sampleEventHandler = new EventHandler(sampleEvent);
+        EventHandler TicketEventHandler = new EventHandler(ticketEvent);
 
 
         ServerSocket listenSocket;
         try {
-            int serverPort = 20000; // the server port
+            int serverPort = 40000; // the server port
             listenSocket = new ServerSocket(serverPort);
 
             System.out.println("Server is ready and waiting for requests ... ");
@@ -31,17 +44,24 @@ public class Server {
 
                 ObjectOutputStream objectOut = new ObjectOutputStream(clientSocket.getOutputStream());
 
+                // Generate AES key with appropriate length
+                SecretKeySpec secretKey = SecurityUtil.generateAESKey();
+                Cipher cipher = Cipher.getInstance("AES");
+
                 objectOut.writeObject(upcomingEvents);
                 objectOut.writeObject(activeEvents);
 
 
-                String request = in.readUTF();
-                if (request.startsWith("join")) {
+                String encryptedRequest = in.readUTF();
+                String decryptedRequest = SecurityUtil.decrypt(encryptedRequest, cipher, secretKey);
+
+                if (decryptedRequest.startsWith("join")) {
                     // Extract event ID from the request
-                    String[] parts = request.split(" ");
+                    String[] parts = decryptedRequest.split(" ");
 
                     if (parts.length < 3) {
-                        out.writeUTF("Invalid request. Please review your input");
+                        String encryptedMessage = SecurityUtil.encrypt("---Invalid request. Please review your input", cipher, secretKey);
+                        out.writeUTF(encryptedMessage);
                         return;
                     }
 
@@ -51,51 +71,36 @@ public class Server {
                     // Find the event in activeEvents
                     Event event = findEventByID(eventID);
                     if (event == null) {
-                        out.writeUTF("Event not found.");
+                        String encryptedMessage = SecurityUtil.encrypt("---Event not found.", cipher, secretKey);
+                        out.writeUTF(encryptedMessage);
                     } else {
                         // Check if the event has started
                         if (event.isActive()) {
-                            sampleEventHandler.addToQueue(clientID, clientSocket);
+                            TicketEventHandler.addToQueue(clientID, clientSocket);
 
                         } else {
-                            // Calculate time left until event starts
-                            long timeLeftMillis = event.getScheduledTimeMillis() - System.currentTimeMillis();
-                            long minutesLeft = timeLeftMillis / (60 * 1000); // Convert milliseconds to minutes
-
-                            sampleEventHandler.addToPrequeue(clientID, clientSocket);
-                            out.writeUTF("Event will start in " + minutesLeft + " minutes. You have been added to the pre-queue!");
-
+                            TicketEventHandler.addToPrequeue(clientID, clientSocket);
                         }
                     }
                 } else {
                     // Handle other types of requests
-                    out.writeUTF("Unsupported request.");
-                }
-
-                if (sampleEventHandler.event.isActive() && !sampleEventHandler.queue.isEmpty()) {
-                    // Iterate over the queue
-                    Iterator<Integer> iterator = sampleEventHandler.queue.iterator();
-
-                    while (iterator.hasNext()) {
-                        try {
-                            Thread.sleep(300);
-
-                            int clientID = iterator.next();
-                            iterator.remove(); // Remove the client from the queue
-
-                            // Get the client socket for the client ID
-                            Socket socketClient = sampleEventHandler.getClientSocket(clientID);
-                            if (socketClient != null) {
-                                // Create a Connection thread for the client
-                                Connection connection = new Connection(clientID, socketClient, sampleEventHandler.event, out, in);
-                            }
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
+                    String encryptedMessage = SecurityUtil.encrypt("---Unsupported request.", cipher, secretKey);
+                    out.writeUTF(encryptedMessage);
                 }
             }
         } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (NoSuchPaddingException e) {
+            throw new RuntimeException(e);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        } catch (InvalidKeySpecException e) {
+            throw new RuntimeException(e);
+        } catch (IllegalBlockSizeException e) {
+            throw new RuntimeException(e);
+        } catch (BadPaddingException e) {
+            throw new RuntimeException(e);
+        } catch (InvalidKeyException e) {
             throw new RuntimeException(e);
         }
     }
@@ -117,3 +122,5 @@ public class Server {
         return null; // Event not found
     }
 }
+
+
