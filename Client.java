@@ -49,8 +49,11 @@ public class Client{
             // Display welcome message
             System.out.println("Welcome to the Event Management System!");
 
-            //ACCEPT UPCOMING
-            //ACCEPT ACTIVE
+            String upcomingEvents = in.readUTF();
+            System.out.println(SecurityUtil.decrypt(upcomingEvents, cipher, secretKey));
+
+            String ActiveEvents = in.readUTF();
+            System.out.println(SecurityUtil.decrypt(ActiveEvents, cipher, secretKey));
 
             // Prompt user for action
             System.out.println("\nPlease enter your action (e.g., join <event_id>):");

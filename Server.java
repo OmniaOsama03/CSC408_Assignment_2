@@ -84,19 +84,35 @@ public class Server {
                     continue;
                 }
 
-                //Sending the upcoming events:
+                //Sending the upcoming events
                 if(upcomingEvents.size() == 0)
                 {
-                    String noUpcoming = "Upcoming Events: \nNone!";
+                    String noUpcoming = "---Upcoming Events: \nNone!";
                     out.writeUTF(SecurityUtil.encrypt(noUpcoming, cipher, secretKey));
                 }
                 else {
+                    String allUpcoming = "---Upcoming Events: ";
                     for (int i = 0; i < upcomingEvents.size(); i++) {
-
+                        allUpcoming += "\n ID: " + upcomingEvents.get(i).getId() + "- Name: " + upcomingEvents.get(i).getName() + " - Time: " + upcomingEvents.get(i).getScheduledTime();
                     }
+
+                    out.writeUTF(SecurityUtil.encrypt(allUpcoming, cipher, secretKey));
                 }
 
-                //SEND ACTIVE
+                //Sending the active events
+                if(activeEvents.size() == 0)
+                {
+                    String noActive = "---Active Events: \nNone!";
+                    out.writeUTF(SecurityUtil.encrypt(noActive, cipher, secretKey));
+                }
+                else {
+                    String allActive = "---Active Events: ";
+                    for (int i = 0; i < activeEvents.size(); i++) {
+                        allActive += "\n ID: " + activeEvents.get(i).getId() + "- Name: " + activeEvents.get(i).getName() + " - Time: " + activeEvents.get(i).getScheduledTime();
+                    }
+
+                    out.writeUTF(SecurityUtil.encrypt(allActive, cipher, secretKey));
+                }
 
                 String encryptedRequest = in.readUTF();
                 String decryptedRequest = SecurityUtil.decrypt(encryptedRequest, cipher, secretKey);
