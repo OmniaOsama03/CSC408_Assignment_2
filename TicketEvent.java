@@ -29,11 +29,12 @@ public class TicketEvent extends Event{
         super(id, name, scheduledTime);
     }
 
-
     @Override
-    public void InitiateEvent(int clientID, DataInputStream in, DataOutputStream out) {
+    public synchronized void InitiateEvent(int clientID, DataInputStream in, DataOutputStream out) {
 
         try {
+            //Setting session time to 2 mins ahead of now
+            setSessionTime(System.currentTimeMillis() + 120000);
 
             // Generate AES key with appropriate length
             SecretKeySpec secretKey = SecurityUtil.generateAESKey();
@@ -56,7 +57,6 @@ public class TicketEvent extends Event{
 
                 if(i != 1)
                    out.writeUTF(SecurityUtil.encrypt("---" + questions[i], cipher, secretKey));
-
                 else
                     out.writeUTF(SecurityUtil.encrypt(questions[i], cipher, secretKey));
 
@@ -89,12 +89,13 @@ public class TicketEvent extends Event{
 
 
                     clientInfo.put(clientID, clientData); //Update hashmap after response
+
+                    checkSessionValidity(out, cipher, secretKey);
                 } else {
                     // Send the corresponding cell value if already answered
                     out.writeUTF(SecurityUtil.encrypt("---Saved response: " + clientData[1][i], cipher, secretKey));
                 }
             }
-
 
             out.writeUTF(SecurityUtil.encrypt("EVENT HAS ENDED! GOODBYE! ", cipher, secretKey));
 

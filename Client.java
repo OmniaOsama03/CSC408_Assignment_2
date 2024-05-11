@@ -20,8 +20,6 @@ public class Client{
     private static Scanner scanner = new Scanner(System.in);
 
     public static void main (String args[]) {
-
-
         // args[0] = ID
         // args[1] = Server IP "localhost"
 

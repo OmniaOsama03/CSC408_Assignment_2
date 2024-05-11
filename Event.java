@@ -1,9 +1,15 @@
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.net.Socket;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.Map;
 
@@ -15,6 +21,7 @@ public class Event
     private long scheduledTimeMillis; // Scheduled time in milliseconds since the epoch
     static private Map<Integer, Socket> clientSockets; // Map to store client sockets
     EventHandler eventHandler;
+    private long sessionTime;
 
     public Event(String id, String name, Date scheduledTime) {
         this.id = id;
@@ -38,7 +45,12 @@ public class Event
     {
         this.active = active;
     }
-
+    public long getSessionTime() {
+        return sessionTime;
+    }
+    public void setSessionTime(long sessionTime) {
+        this.sessionTime = sessionTime;
+    }
     public  void setClientSockets(Map<Integer, Socket> clientSockets) {
         Event.clientSockets = clientSockets;
     }
@@ -93,6 +105,7 @@ public class Event
 
             String encryptedIn = in.readUTF();
             System.out.println("Received from client " + clientID + ": " + new String(SecurityUtil.decrypt(encryptedIn, cipher, secretKey)));
+            checkSessionValidity(out, cipher, secretKey);
 
             encryptedOut = SecurityUtil.encrypt("Oki doki! Goodbye client!", cipher, secretKey);
             out.writeUTF(encryptedOut);
@@ -100,6 +113,31 @@ public class Event
         }catch(Exception e)
         {
             System.out.println("Exception: " + e.getMessage()); e.printStackTrace();
+        }
+    }
+
+     void checkSessionValidity(DataOutputStream out, Cipher cipher, SecretKeySpec secretKey)
+    {
+        if(System.currentTimeMillis() >= sessionTime)
+        {
+            try {
+                String message = "---Sorry! Your session has timed out! Goodbye!";
+                out.writeUTF(SecurityUtil.encrypt(message, cipher, secretKey));
+                System.exit(0);
+
+            } catch (NoSuchPaddingException e) {
+                throw new RuntimeException(e);
+            } catch (IllegalBlockSizeException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException(e);
+            } catch (BadPaddingException e) {
+                throw new RuntimeException(e);
+            } catch (InvalidKeyException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
