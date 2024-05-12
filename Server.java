@@ -27,9 +27,9 @@ public class Server {
     public static void main (String args[]) throws IOException {
 
         // Hardcoded credentials
-        credentials.add(new String[]{"user1", "password1"});
-        credentials.add(new String[]{"user2", "password2"});
-        credentials.add(new String[]{"user3", "password3"});
+        credentials.add(new String[]{SecurityUtil.applySha256("user1"), SecurityUtil.applySha256("password1")});
+        credentials.add(new String[]{SecurityUtil.applySha256("user2"), SecurityUtil.applySha256("password2")});
+        credentials.add(new String[]{SecurityUtil.applySha256("user3"), SecurityUtil.applySha256("password3")});
 
 
         //Create an event
@@ -74,8 +74,11 @@ public class Server {
                 String username = SecurityUtil.decrypt(encryptedUsername, cipher, secretKey);
                 String password = SecurityUtil.decrypt(encryptedPassword, cipher, secretKey);
 
+                String hashedUserName = SecurityUtil.applySha256(username);
+                String hashedPass = SecurityUtil.applySha256(password);
+
                 // Authenticate the user
-                boolean authenticated = authenticate(username, password);
+                boolean authenticated = authenticate(hashedUserName, hashedPass);
 
                 // Send authentication result to the client
                 if (authenticated) {
@@ -193,6 +196,7 @@ public class Server {
     private static boolean authenticate(String username, String password) {
         for (String[] cred : credentials) {
             if (cred[0].equals(username) && cred[1].equals(password)) {
+                System.out.println("Stored Credentials "+cred[0]+ " "+ cred[1] +"\nUser Credentials " + username+ " "+ password +"\n AUTHENTICATED!");
                 return true;
             }
         }
