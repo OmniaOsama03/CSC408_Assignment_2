@@ -215,9 +215,11 @@ public class EventHandler extends Thread {
         while (iterator.hasNext()) {
             Integer client = iterator.next();
             iterator.remove(); // Remove the client using the iterator
-            System.out.println("CLIENT " + client + "(ENTERED QUEUE) at position " + getClientPosition(client) + " " +  System.nanoTime()/1e6);
+
             addToQueue(client, getClientSocket(client));
             clientPositions.put(client, queue.size() - 1); // Store client position in the queue
+            System.out.println("CLIENT " + client + "(ENTERED QUEUE) at position " + getClientPosition(client) + " " +  System.nanoTime()/1e6);
+
         }
         System.out.println("Queue initialized for event: " + event.getName());
     }

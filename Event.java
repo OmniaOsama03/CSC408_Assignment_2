@@ -90,7 +90,8 @@ public class Event
         return year + "-" + month + "-" + day + " " + hours + ":" + minutes + ":" + seconds;
     }
 
-    public void InitiateEvent(int clientID, DataInputStream in, DataOutputStream out)
+
+    public void InitiateEvent(int clientID, DataInputStream in, DataOutputStream out, Socket clientSocket)
     {
         try {
             // Generate AES key with appropriate length
@@ -105,7 +106,7 @@ public class Event
 
             String encryptedIn = in.readUTF();
             System.out.println("Received from client " + clientID + ": " + new String(SecurityUtil.decrypt(encryptedIn, cipher, secretKey)));
-            checkSessionValidity(out, cipher, secretKey);
+            checkSessionValidity(out, clientSocket, cipher, secretKey);
 
             encryptedOut = SecurityUtil.encrypt("Oki doki! Goodbye client!", cipher, secretKey);
             out.writeUTF(encryptedOut);
@@ -116,13 +117,15 @@ public class Event
         }
     }
 
-     void checkSessionValidity(DataOutputStream out, Cipher cipher, SecretKeySpec secretKey)
+     void checkSessionValidity(DataOutputStream out, Socket clientSocket, Cipher cipher, SecretKeySpec secretKey)
     {
         if(System.currentTimeMillis() >= sessionTime)
         {
             try {
                 String message = "---Sorry! Your session has timed out! Goodbye!";
                 out.writeUTF(SecurityUtil.encrypt(message, cipher, secretKey));
+
+                clientSocket.close();
 
             } catch (NoSuchPaddingException e) {
                 throw new RuntimeException(e);

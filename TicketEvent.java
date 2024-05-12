@@ -6,6 +6,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.Socket;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -30,11 +31,12 @@ public class TicketEvent extends Event{
     }
 
     @Override
-    public void InitiateEvent(int clientID, DataInputStream in, DataOutputStream out) {
+
+    public void InitiateEvent(int clientID, DataInputStream in, DataOutputStream out, Socket clientSocket) {
 
         try {
-            //Setting session time to 2 mins ahead of now
-            setSessionTime(System.currentTimeMillis() + 120000);
+            //Setting session time to 5 mins ahead of now
+            setSessionTime(System.currentTimeMillis() + 300000);
 
             // Generate AES key with appropriate length
             SecretKeySpec secretKey = SecurityUtil.generateAESKey();
@@ -91,7 +93,7 @@ public class TicketEvent extends Event{
 
                     clientInfo.put(clientID, clientData); //Update hashmap after response
 
-                    checkSessionValidity(out, cipher, secretKey);
+                    checkSessionValidity(out, clientSocket, cipher, secretKey);
                 } else {
                     // Send the corresponding cell value if already answered
                     out.writeUTF(SecurityUtil.encrypt("---Saved response: " + clientData[1][i], cipher, secretKey));

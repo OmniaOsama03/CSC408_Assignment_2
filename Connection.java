@@ -26,7 +26,7 @@ class Connection extends Thread {
 
     public void run() {
 
-            event.InitiateEvent(clientID, in, out);
+            event.InitiateEvent(clientID, in, out, clientSocket);
 
     }
 }
