@@ -11,6 +11,7 @@ import java.net.Socket;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 public class Event
@@ -21,7 +22,8 @@ public class Event
     private long scheduledTimeMillis; // Scheduled time in milliseconds since the epoch
     static private Map<Integer, Socket> clientSockets; // Map to store client sockets
     EventHandler eventHandler;
-    private long sessionTime;
+
+    static HashMap<Integer, Long> clientSessionTimes = new HashMap<>();
 
     public Event(String id, String name, Date scheduledTime) {
         this.id = id;
@@ -45,12 +47,7 @@ public class Event
     {
         this.active = active;
     }
-    public long getSessionTime() {
-        return sessionTime;
-    }
-    public void setSessionTime(long sessionTime) {
-        this.sessionTime = sessionTime;
-    }
+
     public  void setClientSockets(Map<Integer, Socket> clientSockets) {
         Event.clientSockets = clientSockets;
     }
@@ -91,9 +88,15 @@ public class Event
     }
 
 
-    public void InitiateEvent(int clientID, DataInputStream in, DataOutputStream out, Socket clientSocket)
+    public void InitiateEvent(int clientID, DataInputStream in, DataOutputStream out)
     {
         try {
+            //Setting session time to 5 mins ahead of now if they're new
+            if (!clientSessionTimes.containsKey(clientID)) {
+
+                clientSessionTimes.put(clientID, System.currentTimeMillis() + 300000);
+            }
+
             // Generate AES key with appropriate length
             SecretKeySpec secretKey = SecurityUtil.generateAESKey();
             Cipher cipher = Cipher.getInstance("AES");
@@ -106,7 +109,12 @@ public class Event
 
             String encryptedIn = in.readUTF();
             System.out.println("Received from client " + clientID + ": " + new String(SecurityUtil.decrypt(encryptedIn, cipher, secretKey)));
-            checkSessionValidity(out, clientSocket, cipher, secretKey);
+
+            boolean endSession = SessionTimedOut(clientID, out, cipher, secretKey);
+            if(endSession)
+            {
+                return;
+            }
 
             encryptedOut = SecurityUtil.encrypt("Oki doki! Goodbye client!", cipher, secretKey);
             out.writeUTF(encryptedOut);
@@ -117,15 +125,15 @@ public class Event
         }
     }
 
-     void checkSessionValidity(DataOutputStream out, Socket clientSocket, Cipher cipher, SecretKeySpec secretKey)
+     boolean SessionTimedOut(int clientID, DataOutputStream out, Cipher cipher, SecretKeySpec secretKey)
     {
-        if(System.currentTimeMillis() >= sessionTime)
+        if(System.currentTimeMillis() >= clientSessionTimes.get(clientID))
         {
             try {
                 String message = "---Sorry! Your session has timed out! Goodbye!";
                 out.writeUTF(SecurityUtil.encrypt(message, cipher, secretKey));
 
-                clientSocket.close();
+                return true;
 
             } catch (NoSuchPaddingException e) {
                 throw new RuntimeException(e);
@@ -140,7 +148,8 @@ public class Event
             } catch (InvalidKeyException e) {
                 throw new RuntimeException(e);
             }
-        }
+        }else
+            return false;
     }
 
 }
