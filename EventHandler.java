@@ -43,47 +43,46 @@ public class EventHandler extends Thread {
                 if (!prequeue.isEmpty()) {
                     Iterator<Integer> iterator = prequeue.iterator();
 
-                    while (iterator.hasNext()) {
-                        int clientID = iterator.next();
+                    synchronized (prequeue) {
+                        while (iterator.hasNext()) {
+                            int clientID = iterator.next();
 
-                        try {
-                            Thread.sleep(1000);
+                            try {
+                                Thread.sleep(1000);
 
-                            // Get the client socket for the client ID
-                            Socket socketClient = getClientSocket(clientID);
-                            DataOutputStream out = new DataOutputStream(socketClient.getOutputStream());
+                                // Get the client socket for the client ID
+                                Socket socketClient = getClientSocket(clientID);
+                                DataOutputStream out = new DataOutputStream(socketClient.getOutputStream());
 
-                            long timeLeftMillis = event.getScheduledTimeMillis() - System.currentTimeMillis();
-                            long minutesLeft = timeLeftMillis / (60 * 1000); // Convert milliseconds to minutes
-                            long secondsLeft = (timeLeftMillis / 1000) % 60;
+                                long timeLeftMillis = event.getScheduledTimeMillis() - System.currentTimeMillis();
+                                long minutesLeft = timeLeftMillis / (60 * 1000); // Convert milliseconds to minutes
+                                long secondsLeft = (timeLeftMillis / 1000) % 60;
 
-                            if (minutesLeft != 0) {
-                                String encryptedMessage = SecurityUtil.encrypt("---Event will start in " + minutesLeft + " minutes. Please be patient!", cipher, secretKey);
-                                out.writeUTF(encryptedMessage);
+                                if (minutesLeft != 0) {
+                                    String encryptedMessage = SecurityUtil.encrypt("---Event will start in " + minutesLeft + " minutes. Please be patient!", cipher, secretKey);
+                                    out.writeUTF(encryptedMessage);
+                                } else {
+                                    String encryptedMessage = SecurityUtil.encrypt("---Event will start in " + secondsLeft + " seconds. Please be patient!", cipher, secretKey);
+                                    out.writeUTF(encryptedMessage);
+                                }
+
+                            } catch (IOException e) {
+                                if (prequeue.contains(clientID)) {
+                                    System.out.println("Socket closed for client: " + clientID + "! They have been removed from the prequeue");
+                                    iterator.remove(); // Remove the client from the prequeue
+                                    System.out.println("Size of pre-queue after removal: " + prequeue.size());
+                                } else {
+                                    System.out.println("Socket closed for client: " + clientID + "! Their position will remain in the queue!");
+                                }
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            } catch (IllegalBlockSizeException e) {
+                                throw new RuntimeException(e);
+                            } catch (BadPaddingException e) {
+                                throw new RuntimeException(e);
+                            } catch (InvalidKeyException e) {
+                                throw new RuntimeException(e);
                             }
-                            else {
-                                String encryptedMessage = SecurityUtil.encrypt("---Event will start in " + secondsLeft + " seconds. Please be patient!", cipher, secretKey);
-                                out.writeUTF(encryptedMessage);
-                            }
-
-                        } catch (IOException e) {
-                            if(prequeue.contains(clientID))
-                            {
-                                System.out.println("Socket closed for client: " + clientID + "! They have been removed from the prequeue");
-                                iterator.remove(); // Remove the client from the prequeue
-                                System.out.println("Size of pre-queue after removal: " + prequeue.size());
-                            }else
-                            {
-                                System.out.println("Socket closed for client: " + clientID + "! Their position will remain in the queue!");
-                            }
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        } catch (IllegalBlockSizeException e) {
-                            throw new RuntimeException(e);
-                        } catch (BadPaddingException e) {
-                            throw new RuntimeException(e);
-                        } catch (InvalidKeyException e) {
-                            throw new RuntimeException(e);
                         }
                     }
                 }
@@ -96,6 +95,7 @@ public class EventHandler extends Thread {
                     if (currentTimeMillis >= event.getScheduledTimeMillis()) {
                         event.setActive(true);
                         try {
+
                             initializeQueue();
                         } catch (IOException e) {
                             throw new RuntimeException(e);
@@ -207,6 +207,7 @@ public class EventHandler extends Thread {
         while (iterator.hasNext()) {
             Integer client = iterator.next();
             iterator.remove(); // Remove the client using the iterator
+            System.out.println("CLIENT " + client + "(ENTERED QUEUE): " + System.nanoTime()/1e6);
             addToQueue(client, getClientSocket(client));
             clientPositions.put(client, queue.size() - 1); // Store client position in the queue
         }

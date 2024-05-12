@@ -40,6 +40,7 @@ public class TicketEvent extends Event{
             SecretKeySpec secretKey = SecurityUtil.generateAESKey();
             Cipher cipher = Cipher.getInstance("AES");
 
+            System.out.println("CLIENT " + clientID + "(EVENT STARTED): " + System.nanoTime()/1e6);
             String encryptedOut = SecurityUtil.encrypt("\n---___ ___ ___ ___ ___ TICKET BOOKING EVENT ___ ___ ___ ___ ___ ___ ___ ___ ---", cipher, secretKey);
             out.writeUTF(encryptedOut);
 

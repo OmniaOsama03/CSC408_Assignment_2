@@ -33,7 +33,7 @@ public class Server {
 
 
         //Create an event
-        Date scheduledTime = new Date(124, 4, 12, 1, 30); // May 15, 2024, 14:30
+        Date scheduledTime = new Date(124, 4, 12, 13, 14); // May 15, 2024, 14:30
         Date scheduledTime2 = new Date(124, 4, 12, 1, 20);
         Event sampleEvent = new Event("Ev_2", "Test you communication!", scheduledTime2);
         TicketEvent ticketEvent = new TicketEvent("Ev_1", "Book a Ticket!", scheduledTime);
@@ -168,7 +168,7 @@ public class Server {
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            System.out.println("A client has disconnected!");
         } catch (NoSuchPaddingException e) {
             throw new RuntimeException(e);
         } catch (NoSuchAlgorithmException e) {
