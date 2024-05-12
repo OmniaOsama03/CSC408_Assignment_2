@@ -15,6 +15,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Random;
 
 public class Server {
     static ArrayList<Event> activeEvents = new ArrayList<>();
@@ -73,16 +74,27 @@ public class Server {
                 String username = SecurityUtil.decrypt(encryptedUsername, cipher, secretKey);
                 String password = SecurityUtil.decrypt(encryptedPassword, cipher, secretKey);
 
-                // Authenticate the username and password
-                if (authenticate(username, password)) {
-                    // Send authentication success message to the client
-                    out.writeUTF("authenticated");
+                // Authenticate the user
+                boolean authenticated = authenticate(username, password);
+
+                // Send authentication result to the client
+                if (authenticated) {
+                    // Generate random OTP
+                    String otp = generateOTP(6);
+
+                    // Send OTP to the client
+                    out.writeUTF(SecurityUtil.encrypt(otp, cipher, secretKey));
+
+                    String receivedOTP = in.readUTF();
+                    if(SecurityUtil.decrypt(receivedOTP, cipher, secretKey).equals(otp))
+                        out.writeUTF(SecurityUtil.encrypt("authenticated", cipher, secretKey));
+                    else
+                        out.writeUTF(SecurityUtil.encrypt("AuthenticationDenied", cipher, secretKey));
+
                 } else {
-                    // Send authentication failure message to the client
-                    out.writeUTF("authentication_failed");
-                    // Close the connection
-                    clientSocket.close();
-                    continue;
+                    out.writeUTF(SecurityUtil.encrypt("authentication_failed", cipher, secretKey));
+                    clientSocket.close(); // Close connection for failed authentication
+                    break;
                 }
 
                 //Sending the upcoming events
@@ -115,10 +127,11 @@ public class Server {
                     out.writeUTF(SecurityUtil.encrypt(allActive, cipher, secretKey));
                 }
 
+
                 String encryptedRequest = in.readUTF();
                 String decryptedRequest = SecurityUtil.decrypt(encryptedRequest, cipher, secretKey);
-
-                if (decryptedRequest.startsWith("join") || decryptedRequest.startsWith("Join") || decryptedRequest.startsWith("JOIN")) {
+                System.out.println(decryptedRequest);
+                if (decryptedRequest.startsWith("join")) {
                     // Extract event ID from the request
                     String[] parts = decryptedRequest.split(" ");
 
@@ -167,8 +180,17 @@ public class Server {
             throw new RuntimeException(e);
         }
     }
+    private static String generateOTP(int length) {
+        // Generate a random OTP
+        Random random = new Random();
+        StringBuilder otp = new StringBuilder();
+        for (int i = 0; i < length; i++) {
+            otp.append(random.nextInt(10));
+        }
+        return otp.toString();
+    }
+
     private static boolean authenticate(String username, String password) {
-        // Check if the provided username exists and the password matches
         for (String[] cred : credentials) {
             if (cred[0].equals(username) && cred[1].equals(password)) {
                 return true;
@@ -193,6 +215,7 @@ public class Server {
         }
         return null; // Event not found
     }
+
 }
 
 
