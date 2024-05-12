@@ -30,7 +30,7 @@ public class TicketEvent extends Event{
     }
 
     @Override
-    public synchronized void InitiateEvent(int clientID, DataInputStream in, DataOutputStream out) {
+    public void InitiateEvent(int clientID, DataInputStream in, DataOutputStream out) {
 
         try {
             //Setting session time to 2 mins ahead of now

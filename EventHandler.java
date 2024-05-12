@@ -19,6 +19,8 @@ public class EventHandler extends Thread {
       Map<Integer, Integer> clientPositions; // Map to store client positions in the queue
       static Map<Integer, Socket> clientSockets; // Map to store client sockets
 
+      boolean prequeueLock = false;
+      boolean queuelock = false;
 
 
     public EventHandler(Event event) {
@@ -40,16 +42,14 @@ public class EventHandler extends Thread {
                 SecretKeySpec secretKey = SecurityUtil.generateAESKey();
                 Cipher cipher = Cipher.getInstance("AES");
 
-                if (!prequeue.isEmpty()) {
+                if (!prequeue.isEmpty() && prequeueLock == false) {
                     Iterator<Integer> iterator = prequeue.iterator();
 
-                    synchronized (prequeue) {
-                        while (iterator.hasNext()) {
+                        while (iterator.hasNext())
+                        {
                             int clientID = iterator.next();
 
                             try {
-                                Thread.sleep(1000);
-
                                 // Get the client socket for the client ID
                                 Socket socketClient = getClientSocket(clientID);
                                 DataOutputStream out = new DataOutputStream(socketClient.getOutputStream());
@@ -74,8 +74,6 @@ public class EventHandler extends Thread {
                                 } else {
                                     System.out.println("Socket closed for client: " + clientID + "! Their position will remain in the queue!");
                                 }
-                            } catch (InterruptedException e) {
-                                throw new RuntimeException(e);
                             } catch (IllegalBlockSizeException e) {
                                 throw new RuntimeException(e);
                             } catch (BadPaddingException e) {
@@ -84,7 +82,6 @@ public class EventHandler extends Thread {
                                 throw new RuntimeException(e);
                             }
                         }
-                    }
                 }
 
 
@@ -107,7 +104,7 @@ public class EventHandler extends Thread {
                 }
 
 
-                if (event.isActive() && !queue.isEmpty()) {
+                if (event.isActive() && !queue.isEmpty() && queuelock == false) {
                     try {
                         Thread.sleep(200);
 
@@ -116,7 +113,6 @@ public class EventHandler extends Thread {
 
                         while (iterator.hasNext()) {
                             int clientID = iterator.next();
-                            iterator.remove(); // Remove the client from the queue
 
                             // Get the client socket for the client ID
                             Socket socketClient = getClientSocket(clientID);
@@ -124,6 +120,9 @@ public class EventHandler extends Thread {
                                 // Create a Connection thread for the client
                                 Connection connection = new Connection(clientID, socketClient, event);
                             }
+
+                            iterator.remove(); // Remove the client from the queue
+
                         }
 
                     } catch (InterruptedException e) {
@@ -144,26 +143,31 @@ public class EventHandler extends Thread {
         }
     }
 
-    public void addToQueue(Integer client, Socket clientSocket) throws IOException {
+    public synchronized void addToQueue(Integer client, Socket clientSocket) throws IOException {
         try {
             DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream());
             SecretKeySpec secretKey = SecurityUtil.generateAESKey();
             Cipher cipher = Cipher.getInstance("AES");
 
-            // Check if the event is active before adding client to the queue
-            if (event.isActive()) {
+              queuelock = true;
+
+              // Check if the event is active before adding client to the queue
+              if (event.isActive()) {
                 if (!clientSockets.containsKey(client))
                     clientSockets.put(client, clientSocket); // Store the client socket in the map
 
                 clientPositions.put(client, queue.size() + 1); // Store client position in the queue
 
                 queue.add(client);
+                queuelock = false;
 
                 String encryptedMessage = SecurityUtil.encrypt("--- You have been added to the event: " + event.getName() + ".\n" + "Your position in the queue: " + getClientPosition(client), cipher, secretKey);
                 out.writeUTF(encryptedMessage);
 
                 System.out.println("Client " + client + " has been added to the queue for event: " +
                         event.getName() + "\nQueue size: " + queue.size());
+
+
             }
         } catch (NoSuchPaddingException e) {
             throw new RuntimeException(e);
@@ -182,7 +186,9 @@ public class EventHandler extends Thread {
     }
 
 
-    public void addToPrequeue(Integer client, Socket clientSocket) {
+    public synchronized void addToPrequeue(Integer client, Socket clientSocket) {
+        prequeueLock = true;
+
         // Check if the event has not started yet before adding client to the prequeue
         if (!event.isActive()) {
             if (!clientSockets.containsKey(client))
@@ -194,6 +200,8 @@ public class EventHandler extends Thread {
             prequeue.add(client);
             System.out.println("Client " + client + " has been added to the pre-queue for event: " + event.getName());
         }
+
+        prequeueLock = false;
     }
 
     private void initializeQueue() throws IOException {
@@ -207,7 +215,7 @@ public class EventHandler extends Thread {
         while (iterator.hasNext()) {
             Integer client = iterator.next();
             iterator.remove(); // Remove the client using the iterator
-            System.out.println("CLIENT " + client + "(ENTERED QUEUE): " + System.nanoTime()/1e6);
+            System.out.println("CLIENT " + client + "(ENTERED QUEUE) at position " + getClientPosition(client) + " " +  System.nanoTime()/1e6);
             addToQueue(client, getClientSocket(client));
             clientPositions.put(client, queue.size() - 1); // Store client position in the queue
         }

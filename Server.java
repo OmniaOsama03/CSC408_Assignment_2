@@ -33,7 +33,7 @@ public class Server {
 
 
         //Create an event
-        Date scheduledTime = new Date(124, 4, 12, 13, 14); // May 15, 2024, 14:30
+        Date scheduledTime = new Date(124, 4, 12, 13, 52); // May 15, 2024, 14:30
         Date scheduledTime2 = new Date(124, 4, 12, 1, 20);
         Event sampleEvent = new Event("Ev_2", "Test you communication!", scheduledTime2);
         TicketEvent ticketEvent = new TicketEvent("Ev_1", "Book a Ticket!", scheduledTime);
@@ -133,7 +133,6 @@ public class Server {
 
                 String encryptedRequest = in.readUTF();
                 String decryptedRequest = SecurityUtil.decrypt(encryptedRequest, cipher, secretKey);
-                System.out.println(decryptedRequest);
                 if (decryptedRequest.startsWith("join")) {
                     // Extract event ID from the request
                     String[] parts = decryptedRequest.split(" ");

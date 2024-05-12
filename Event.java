@@ -123,7 +123,6 @@ public class Event
             try {
                 String message = "---Sorry! Your session has timed out! Goodbye!";
                 out.writeUTF(SecurityUtil.encrypt(message, cipher, secretKey));
-                System.exit(0);
 
             } catch (NoSuchPaddingException e) {
                 throw new RuntimeException(e);
