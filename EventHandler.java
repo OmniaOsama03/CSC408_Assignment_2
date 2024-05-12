@@ -67,9 +67,15 @@ public class EventHandler extends Thread {
                             }
 
                         } catch (IOException e) {
-                            System.out.println("Socket closed for client: " + clientID + "! They have been removed from the prequeue");
-                            iterator.remove(); // Remove the client from the prequeue
-                            System.out.println("Size of pre-queue after removal: " + prequeue.size());
+                            if(prequeue.contains(clientID))
+                            {
+                                System.out.println("Socket closed for client: " + clientID + "! They have been removed from the prequeue");
+                                iterator.remove(); // Remove the client from the prequeue
+                                System.out.println("Size of pre-queue after removal: " + prequeue.size());
+                            }else
+                            {
+                                System.out.println("Socket closed for client: " + clientID + "! Their position will remain in the queue!");
+                            }
                         } catch (InterruptedException e) {
                             throw new RuntimeException(e);
                         } catch (IllegalBlockSizeException e) {
