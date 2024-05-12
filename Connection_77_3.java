@@ -3,14 +3,20 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-class Connection extends Thread {
-    Event event;
+/*
+    Omnia Osama Ahmed  1084505
+    Maryam Mohammaed Ali 1079679
+    Nourhan Ahmed Elmehalawy 1078096
+*/
+
+class Connection_77_3 extends Thread {
+    Event_77_3 event;
     Socket clientSocket;
     int clientID;
     DataOutputStream out;
     DataInputStream in;
 
-    public Connection (int clientID, Socket clientSocket, Event event) {
+    public Connection_77_3(int clientID, Socket clientSocket, Event_77_3 event) {
         try {
             this.clientSocket = clientSocket;
             this.event = event;
@@ -26,8 +32,8 @@ class Connection extends Thread {
 
     public void run() {
 
-            event.InitiateEvent(clientID, in, out);
-
+        //Initiating the client's event
+        event.InitiateEvent(clientID, in, out);
     }
 }
 

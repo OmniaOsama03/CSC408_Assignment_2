@@ -6,56 +6,55 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.net.Socket;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+/*
+    Omnia Osama Ahmed  1084505
+    Maryam Mohammaed Ali 1079679
+    Nourhan Ahmed Elmehalawy 1078096
+*/
 
-public class Event
+public class Event_77_3
 {
     private String id;
     private String name;
-    private boolean active; //Set the value in the constructor.
+    private boolean active;
     private long scheduledTimeMillis; // Scheduled time in milliseconds since the epoch
     static private Map<Integer, Socket> clientSockets; // Map to store client sockets
-    EventHandler eventHandler;
-
     static HashMap<Integer, Long> clientSessionTimes = new HashMap<>();
 
-    public Event(String id, String name, Date scheduledTime) {
+
+    public Event_77_3(String id, String name, Date scheduledTime) {
         this.id = id;
         this.name = name;
         this.scheduledTimeMillis = scheduledTime.getTime(); // Convert Date to milliseconds since the epoch
 
         // Set the initial state of the event based on the scheduled time
         if (System.currentTimeMillis() >= scheduledTimeMillis) {
+
+            // Event is active
             active = true;
-            Server.activeEvents.add(this); // Add event to the list of active events
+            Server_77_3.activeEvents.add(this);
 
         } else {
+
+            // Event is upcoming
             active = false;
-            Server.upcomingEvents.add(this); // Add event to the list of upcoming events
+            Server_77_3.upcomingEvents.add(this);
         }
 
     }
 
 
+    // Necessary setters and getters
     public void setActive(Boolean active)
     {
         this.active = active;
     }
-
-    public  void setClientSockets(Map<Integer, Socket> clientSockets) {
-        Event.clientSockets = clientSockets;
-    }
-
-    public void setEventHandler(EventHandler eventHandler) {
-        this.eventHandler = eventHandler;
-    }
-
     public String getId() {
         return id;
     }
@@ -72,10 +71,10 @@ public class Event
         return this.active;
     }
     public String getScheduledTime() {
-        // Convert milliseconds to Date
+        // Converting milliseconds to Date
         Date scheduledDate = new Date(scheduledTimeMillis);
 
-        // Extract individual components of the date
+        // Extracting individual components of the date
         int year = scheduledDate.getYear() + 1900; // Adding 1900 because getYear() returns the year minus 1900
         int month = scheduledDate.getMonth() + 1; // Adding 1 because months are 0-based
         int day = scheduledDate.getDate();
@@ -83,7 +82,7 @@ public class Event
         int minutes = scheduledDate.getMinutes();
         int seconds = scheduledDate.getSeconds();
 
-        // Construct a string representing the scheduled time
+
         return year + "-" + month + "-" + day + " " + hours + ":" + minutes + ":" + seconds;
     }
 
@@ -93,30 +92,30 @@ public class Event
         try {
             //Setting session time to 5 mins ahead of now if they're new
             if (!clientSessionTimes.containsKey(clientID)) {
-
                 clientSessionTimes.put(clientID, System.currentTimeMillis() + 300000);
             }
 
-            // Generate AES key with appropriate length
-            SecretKeySpec secretKey = SecurityUtil.generateAESKey();
+            // Generating cipher & secret key
+            SecretKeySpec secretKey = SecurityUtil_77_3.generateAESKey();
             Cipher cipher = Cipher.getInstance("AES");
 
-            String encryptedOut = SecurityUtil.encrypt("\n---___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ---", cipher, secretKey);
+            String encryptedOut = SecurityUtil_77_3.encrypt("\n---___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ___ ---", cipher, secretKey);
             out.writeUTF(encryptedOut);
 
-            encryptedOut = SecurityUtil.encrypt("Welcome to your session in event: " + this.name +  "\n" + "Hello client, are you able to reply?", cipher, secretKey);
+            encryptedOut = SecurityUtil_77_3.encrypt("Welcome to your session in event: " + this.name +  "\n" + "Hello client, are you able to reply?", cipher, secretKey);
             out.writeUTF(encryptedOut);
 
             String encryptedIn = in.readUTF();
-            System.out.println("Received from client " + clientID + ": " + new String(SecurityUtil.decrypt(encryptedIn, cipher, secretKey)));
+            System.out.println("Received from client " + clientID + ": " + new String(SecurityUtil_77_3.decrypt(encryptedIn, cipher, secretKey)));
 
+            // Checking if event timed out
             boolean endSession = SessionTimedOut(clientID, out, cipher, secretKey);
             if(endSession)
             {
                 return;
             }
 
-            encryptedOut = SecurityUtil.encrypt("Oki doki! Goodbye client!", cipher, secretKey);
+            encryptedOut = SecurityUtil_77_3.encrypt("Oki doki! Goodbye client!", cipher, secretKey);
             out.writeUTF(encryptedOut);
 
         }catch(Exception e)
@@ -127,11 +126,12 @@ public class Event
 
      boolean SessionTimedOut(int clientID, DataOutputStream out, Cipher cipher, SecretKeySpec secretKey)
     {
+        // Checking if current time >= session time
         if(System.currentTimeMillis() >= clientSessionTimes.get(clientID))
         {
             try {
                 String message = "---Sorry! Your session has timed out! Goodbye!";
-                out.writeUTF(SecurityUtil.encrypt(message, cipher, secretKey));
+                out.writeUTF(SecurityUtil_77_3.encrypt(message, cipher, secretKey));
 
                 return true;
 

@@ -6,7 +6,6 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.Socket;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -14,19 +13,19 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TicketEvent extends Event{
-    private static String[][] tickets = {
-            {"Movie", "Concert", "Museum"}, // Categories
-            {"100", "200", "150"} // Available counts
-    };
-    private static String[] ticketTypes = {"Normal", "Golden"}; // 1D array of ticket types
-    private static String[] questions =
-            {"What category of tickets would you like?",
-             "How many tickets are you purchasing? ",
-             "What ticket type would you like?"}; // 1D array of questions
-    private static Map<Integer, String[][]> clientInfo = new HashMap<>(); // Hashmap to store client information
+/*
+    Omnia Osama Ahmed  1084505
+    Maryam Mohammaed Ali 1079679
+    Nourhan Ahmed Elmehalawy 1078096
+*/
 
-    public TicketEvent(String id, String name, Date scheduledTime) {
+public class TicketEvent_77_3 extends Event_77_3 {
+    private static String[][] tickets = {{"Movie", "Concert", "Museum"}, {"100", "200", "150"}};
+    private static String[] ticketTypes = {"Normal", "Golden"};
+    private static String[] questions = {"What category of tickets would you like?", "How many tickets are you purchasing? ", "What ticket type would you like?"};
+    private static Map<Integer, String[][]> clientInfo = new HashMap<>();
+
+    public TicketEvent_77_3(String id, String name, Date scheduledTime) {
         super(id, name, scheduledTime);
     }
 
@@ -39,34 +38,36 @@ public class TicketEvent extends Event{
                 clientSessionTimes.put(clientID, System.currentTimeMillis() + 300000);
             }
 
-            // Generate AES key with appropriate length
-            SecretKeySpec secretKey = SecurityUtil.generateAESKey();
+            // Generating secret key & cipher
+            SecretKeySpec secretKey = SecurityUtil_77_3.generateAESKey();
             Cipher cipher = Cipher.getInstance("AES");
 
-            System.out.println("CLIENT " + clientID + "(EVENT STARTED): " + System.nanoTime()/1e6);
-            String encryptedOut = SecurityUtil.encrypt("\n---___ ___ ___ ___ ___ TICKET BOOKING EVENT ___ ___ ___ ___ ___ ___ ___ ___ ---", cipher, secretKey);
+            String encryptedOut = SecurityUtil_77_3.encrypt("\n---___ ___ ___ ___ ___ TICKET BOOKING EVENT ___ ___ ___ ___ ___ ___ ___ ___ ---", cipher, secretKey);
             out.writeUTF(encryptedOut);
 
             String[][] clientData;
             if (!clientInfo.containsKey(clientID)) {
-                // Create a new array for the client
+
+                // Creating a new array for the client
                 clientData = new String[2][questions.length];
                 clientInfo.put(clientID, clientData);
             }
 
+            // Retrieving saved client responses
             clientData = clientInfo.get(clientID);
 
-            // Loop through questions
+            // Looping through questions
             for (int i = 0; i < questions.length; i++) {
 
-                if(i != 1)
-                   out.writeUTF(SecurityUtil.encrypt("---" + questions[i], cipher, secretKey));
+                if(i != 1) // No reply from client is required
+                   out.writeUTF(SecurityUtil_77_3.encrypt("---" + questions[i], cipher, secretKey));
                 else
-                    out.writeUTF(SecurityUtil.encrypt(questions[i], cipher, secretKey));
+                    out.writeUTF(SecurityUtil_77_3.encrypt(questions[i], cipher, secretKey));
 
-                //Check if question is saved
+                // Checking if question is saved
                 if (!"saved".equals(clientData[0][i])) {
 
+                    // Print ticket options
                     if(i == 0)
                         printAvailableTickets(out, cipher, secretKey);
                     else if(i == 2)
@@ -75,37 +76,38 @@ public class TicketEvent extends Event{
                     String answer = null;
                     String decryptedAnswer = null;
 
-
+                    // Detecting an incoming message
                     boolean received = false;
                     while(!received) {
-
                         if (in.available() > 0) {
 
                             answer = in.readUTF();
-                            decryptedAnswer = SecurityUtil.decrypt(answer, cipher, secretKey);
+                            decryptedAnswer = SecurityUtil_77_3.decrypt(answer, cipher, secretKey);
                             received = true;
                         }
                     }
 
-                    // Save the answer
+                    // Saving the answer in the client's 2d array
                     clientData[0][i] = "saved";
                     clientData[1][i] = decryptedAnswer;
 
+                    //Updating hashmap after response
+                    clientInfo.put(clientID, clientData);
 
-                    clientInfo.put(clientID, clientData); //Update hashmap after response
-
+                    // Checking if session's time is up
                     if(SessionTimedOut(clientID, out, cipher, secretKey))
                     {
                         return;
                     }
 
                 } else {
+
                     // Send the corresponding cell value if already answered
-                    out.writeUTF(SecurityUtil.encrypt("---Saved response: " + clientData[1][i], cipher, secretKey));
+                    out.writeUTF(SecurityUtil_77_3.encrypt("---Saved response: " + clientData[1][i], cipher, secretKey));
                 }
             }
 
-            out.writeUTF(SecurityUtil.encrypt("EVENT HAS ENDED! GOODBYE! ", cipher, secretKey));
+            out.writeUTF(SecurityUtil_77_3.encrypt("EVENT HAS ENDED! GOODBYE! ", cipher, secretKey));
 
         } catch (NoSuchPaddingException ex) {
             throw new RuntimeException(ex);
@@ -132,7 +134,7 @@ public class TicketEvent extends Event{
             availableTickets += "Category: " + tickets[0][i] + ", Available: Tickets" + tickets[1][i] + "\n";
         }
 
-        String encryptedMsg = SecurityUtil.encrypt(availableTickets, cipher, secretKey);
+        String encryptedMsg = SecurityUtil_77_3.encrypt(availableTickets, cipher, secretKey);
         out.writeUTF(encryptedMsg);
     }
 
@@ -142,7 +144,7 @@ public class TicketEvent extends Event{
             ticketTypeMsg += type + "   ";
         }
 
-        String encryptedMsg = SecurityUtil.encrypt(ticketTypeMsg.toString(), cipher, secretKey);
+        String encryptedMsg = SecurityUtil_77_3.encrypt(ticketTypeMsg.toString(), cipher, secretKey);
         out.writeUTF(encryptedMsg);
     }
 }

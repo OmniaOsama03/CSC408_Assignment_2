@@ -1,5 +1,3 @@
-import com.google.gson.GsonBuilder;
-
 import javax.crypto.*;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -11,7 +9,13 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.Base64;
 
-class SecurityUtil {
+/*
+    Omnia Osama Ahmed  1084505
+    Maryam Mohammaed Ali 1079679
+    Nourhan Ahmed Elmehalawy 1078096
+*/
+
+class SecurityUtil_77_3 {
     public static SecretKeySpec generateAESKey() throws NoSuchAlgorithmException, InvalidKeySpecException {
         SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
         KeySpec spec = new PBEKeySpec("MySecretKey".toCharArray(), "salt".getBytes(), 65536, 128);
