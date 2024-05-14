@@ -24,7 +24,6 @@ public class Event_77_3
     private String name;
     private boolean active;
     private long scheduledTimeMillis; // Scheduled time in milliseconds since the epoch
-    static private Map<Integer, Socket> clientSockets; // Map to store client sockets
     static HashMap<Integer, Long> clientSessionTimes = new HashMap<>();
 
 

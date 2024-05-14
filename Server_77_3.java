@@ -24,7 +24,6 @@ import java.util.Random;
 
 public class Server_77_3 {
 
-
     static ArrayList<Event_77_3> activeEvents = new ArrayList<>();
     static ArrayList<Event_77_3> upcomingEvents = new ArrayList<>();
     static HashMap<String, EventHandler_77_3> allEvents = new HashMap<>(); //stored IDs and event handlers
@@ -40,12 +39,13 @@ public class Server_77_3 {
 
 
         // Scheduling times for events
-        Date scheduledTime = new Date(124, 4, 12, 17, 14); // May 15, 2024, 14:30
-        Date scheduledTime2 = new Date(124, 4, 12, 1, 20);
+        Date scheduledTime = new Date(124, 4, 14, 15, 55); // May 15, 2024, 14:30
+        Date scheduledTime2 = new Date(124, 4, 14, 1, 20);
 
         // Creating sample events
         Event_77_3 sampleEvent = new Event_77_3("Ev_2", "Test you communication!", scheduledTime2);
         TicketEvent_77_3 ticketEvent = new TicketEvent_77_3("Ev_1", "Book a Ticket!", scheduledTime);
+
 
         // Creating event handlers for active events
         for(int i = 0; i < activeEvents.size(); i++) {

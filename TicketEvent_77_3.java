@@ -74,7 +74,6 @@ public class TicketEvent_77_3 extends Event_77_3 {
                         printTicketTypes(out, cipher, secretKey);
 
                     String answer = null;
-                    String decryptedAnswer = null;
 
                     // Detecting an incoming message
                     boolean received = false;
@@ -82,14 +81,14 @@ public class TicketEvent_77_3 extends Event_77_3 {
                         if (in.available() > 0) {
 
                             answer = in.readUTF();
-                            decryptedAnswer = SecurityUtil_77_3.decrypt(answer, cipher, secretKey);
                             received = true;
+
                         }
                     }
 
                     // Saving the answer in the client's 2d array
                     clientData[0][i] = "saved";
-                    clientData[1][i] = decryptedAnswer;
+                    clientData[1][i] = answer; //encrypted
 
                     //Updating hashmap after response
                     clientInfo.put(clientID, clientData);
@@ -103,7 +102,7 @@ public class TicketEvent_77_3 extends Event_77_3 {
                 } else {
 
                     // Send the corresponding cell value if already answered
-                    out.writeUTF(SecurityUtil_77_3.encrypt("---Saved response: " + clientData[1][i], cipher, secretKey));
+                    out.writeUTF(SecurityUtil_77_3.encrypt("---Saved response: " + SecurityUtil_77_3.decrypt(clientData[1][i], cipher, secretKey), cipher, secretKey));
                 }
             }
 

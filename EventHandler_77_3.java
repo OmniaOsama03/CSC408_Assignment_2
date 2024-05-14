@@ -53,9 +53,10 @@ public class EventHandler_77_3 extends Thread {
                 if (!prequeue.isEmpty() && prequeueLock == false) {
 
                     Iterator<Integer> iterator = prequeue.iterator();
-                        while (iterator.hasNext())
-                        {
+                        while (iterator.hasNext() && prequeueLock == false) {
                             int clientID = iterator.next();
+                            try {
+
 
                                 // Getting the client socket for the client ID and creating output stream
                                 Socket socketClient = getClientSocket(clientID);
@@ -74,8 +75,27 @@ public class EventHandler_77_3 extends Thread {
                                     String encryptedMessage = SecurityUtil_77_3.encrypt("---Event will start in " + secondsLeft + " seconds. Please be patient!", cipher, secretKey);
                                     out.writeUTF(encryptedMessage);
                                 }
+                            } catch (IOException e) {
+                                System.out.println("Socket closed for client: " + clientID + "! They have been removed from the prequeue");
+                                iterator.remove(); // Remove the client from the prequeue
+                                System.out.println("Size of pre-queue after removal: " + prequeue.size());
+                            } catch (IllegalBlockSizeException e) {
+                                throw new RuntimeException(e);
+                            } catch (BadPaddingException e) {
+                                throw new RuntimeException(e);
+                            } catch (InvalidKeyException e) {
+                                throw new RuntimeException(e);
+                            } catch (NoSuchPaddingException e) {
+                                throw new RuntimeException(e);
+                            } catch (NoSuchAlgorithmException e) {
+                                throw new RuntimeException(e);
+                            }
                         }
+
                 }
+
+
+
 
                 // Checks if it's time to activate the event
                 if (!event.isActive())
@@ -100,7 +120,7 @@ public class EventHandler_77_3 extends Thread {
                 // Iterate over the queue
                 Iterator<Integer> iterator = queue.iterator();
 
-                while (iterator.hasNext()) {
+                while (iterator.hasNext() && queuelock == false) {
 
                     //Extracting client socket
                     int clientID = iterator.next();
@@ -126,13 +146,7 @@ public class EventHandler_77_3 extends Thread {
                 throw new RuntimeException(e);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
-            } catch (IllegalBlockSizeException e) {
-                throw new RuntimeException(e);
             } catch (IOException e) {
-                throw new RuntimeException(e);
-            } catch (BadPaddingException e) {
-                throw new RuntimeException(e);
-            } catch (InvalidKeyException e) {
                 throw new RuntimeException(e);
             }
         }
