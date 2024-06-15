@@ -9,11 +9,6 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.Base64;
 
-/*
-    Omnia Osama Ahmed  1084505
-    Maryam Mohammaed Ali 1079679
-    Nourhan Ahmed Elmehalawy 1078096
-*/
 
 class SecurityUtil_77_3 {
     public static SecretKeySpec generateAESKey() throws NoSuchAlgorithmException, InvalidKeySpecException {
