@@ -16,11 +16,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Random;
 
-/*
-    Omnia Osama Ahmed  1084505
-    Maryam Mohammaed Ali 1079679
-    Nourhan Ahmed Elmehalawy 1078096
-*/
 
 public class Server_77_3 {
 
