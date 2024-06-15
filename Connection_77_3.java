@@ -3,12 +3,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-/*
-    Omnia Osama Ahmed  1084505
-    Maryam Mohammaed Ali 1079679
-    Nourhan Ahmed Elmehalawy 1078096
-*/
-
 class Connection_77_3 extends Thread {
     Event_77_3 event;
     Socket clientSocket;
