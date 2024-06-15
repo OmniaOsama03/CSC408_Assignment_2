@@ -13,11 +13,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-/*
-    Omnia Osama Ahmed  1084505
-    Maryam Mohammaed Ali 1079679
-    Nourhan Ahmed Elmehalawy 1078096
-*/
 
 public class TicketEvent_77_3 extends Event_77_3 {
     private static String[][] tickets = {{"Movie", "Concert", "Museum"}, {"100", "200", "150"}};
