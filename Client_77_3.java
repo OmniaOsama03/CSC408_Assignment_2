@@ -13,11 +13,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Scanner;
 
-/*
-    Omnia Osama Ahmed  1084505
-    Maryam Mohammaed Ali 1079679
-    Nourhan Ahmed Elmehalawy 1078096
-*/
 
 public class Client_77_3 {
     private static Scanner scanner = new Scanner(System.in);
